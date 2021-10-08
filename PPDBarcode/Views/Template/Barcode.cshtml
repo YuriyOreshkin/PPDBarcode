@@ -1,0 +1,62 @@
+﻿@model PPDBarcode.Models.BarcodeViewModel
+
+
+<div class="k-content center" style="float:right; width:210px;">
+    @(
+                                Html.Kendo().QRCode()
+                                    .Name("qrCode")
+                                    .Value(String.IsNullOrEmpty(Model.Value) ?  Model.Name : Model.Value)
+                                    .Size(200)
+                                    .Encoding(QREncoding.UTF_8)
+                                    .ErrorCorrection(QRErrorCorrectionLevel.M)
+    )
+</div>
+<div class="k-edit-form-container" style="display:block;float:left; margin-top:12px; width:calc(100% - 220px);">
+    <form id="barcode-insert" style="height:100%;">
+        <div class="k-form-field">
+            @Html.LabelFor(model => model.Name, new { @class = "editor-label" })
+            <div class="editor-field">
+                @Html.Kendo().TextBoxFor(m => m.Name).HtmlAttributes(new { style = "width:100%;" })
+               
+            </div>
+        </div>
+        <div class="k-form-field">
+            @Html.LabelFor(model => model.Value, new { @class = "editor-label" })
+            <div class="editor-field">
+                @Html.TextAreaFor(m => m.Value, new { @class = "k-textbox", style = "width:100%;" })
+            </div>
+        </div>
+        <div class="k-form-field">
+            @Html.LabelFor(model => model.Size, new { @class = "editor-label" })
+            <div class="editor-field">
+                @Html.Kendo().IntegerTextBoxFor(m => m.Size)
+            </div>
+        </div>
+     </form>
+        <div class="k-edit-buttons k-state-default">
+            @(Html.Kendo().Button().Name("okAdd").Tag("div").HtmlAttributes(new { type = "button", @class = "k-primary" }).Icon("check").Content("Сохранить").Events(click => click.Click("InsertBarcode")))
+
+            @(Html.Kendo().Button().Name("cancelAdd").Tag("em").HtmlAttributes(new { type = "button" }).Icon("cancel").Content("Отмена").Events(click => click.Click("closeWindow")))
+
+        </div>
+</div>
+<script>
+
+    $(document).ready(function () {
+        var qrCode = $("#qrCode").data("kendoQRCode");
+        $("#Value").bind("change", function (e) {
+            qrCode.value(this.value);
+        });
+
+    });
+
+</script>
+<style>
+    .k-edit-form-container .k-edit-buttons {
+        position: fixed; /* Фиксированное положение */
+        left: 0;
+        bottom: 0; /* Левый нижний угол */
+        width: calc(100% - 1.2em); /* Ширина слоя */
+        padding: .6em;
+    }
+</style>

@@ -1,0 +1,32 @@
+﻿@model IEnumerable<PPDBarcode.Models.ParameterViewModel>
+
+<div class="k-edit-form-container" style="width:50%">
+    @using (Html.BeginForm("Full", "Template", FormMethod.Post))
+    {
+    <fieldset class="k-form-fieldset" style="margin-bottom:20px;">
+        <legend class="k-form-legend">ДСВ</legend>
+
+        @foreach (PPDBarcode.Models.ParameterViewModel parametr in Model)
+        {
+            if (parametr.Hide)
+            {
+                @Html.Hidden(parametr.Name, parametr.DefaultValue)
+            }
+            else
+            {
+                <div class="k-form-field">
+                    <label class="k-label k-form-label" for="@parametr.Name">@parametr.Label:</label>
+                    <div class="k-form-field-wrap">
+                        @Html.Partial("~/Views/Parameters/EditorTemplates/" + parametr.EditorTemplate + ".cshtml", parametr)
+                    </div>
+                </div>
+                }
+            }
+     </fieldset>
+    <div class="k-edit-buttons k-state-default">
+        @(Html.Kendo().Button().Name("PreView").HtmlAttributes(new { type = "submit", @class = "k-primary" }).Icon("preview").Content("Сформировать"))
+    </div>
+    }
+
+</div>
+

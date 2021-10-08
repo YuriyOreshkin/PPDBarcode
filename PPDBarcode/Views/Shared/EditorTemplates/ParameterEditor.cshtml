@@ -1,0 +1,47 @@
+﻿@model PPDBarcode.Models.ParameterViewModel
+
+    @Html.HiddenFor(model => model.Id)
+    <div class="k-form-field">
+        @Html.LabelFor(model => model.Name, new { @class = "editor-label" })
+        <div class="editor-field">
+            @Html.Kendo().TextBoxFor(m => m.Name).HtmlAttributes(new { style = "width:100%;" })
+        </div>
+    </div>
+    <div class="k-form-field">
+        @Html.LabelFor(model => model.Label, new { @class = "editor-label" })
+        <div class="editor-field">
+            @Html.Kendo().TextBoxFor(m => m.Label).HtmlAttributes(new { style = "width:100%;" })
+        </div>
+    </div>
+    <div class="k-form-field">
+        @Html.LabelFor(model => model.DefaultValue, new { @class = "editor-label" })
+        <div class="editor-field">
+            @Html.TextAreaFor(m => m.DefaultValue, new { @class = "k-textbox", style = "width:100%;" })
+        </div>
+    </div>
+    <div class="k-form-field">
+        @Html.LabelFor(model => model.EditorTemplate, new { @class = "editor-label" })
+        <div class="editor-field">
+            @Html.Kendo().DropDownListFor(m => m.EditorTemplate).DataTextField("Text").DataValueField("Value").DataSource(dataSource => dataSource.Read(read => read.Action("ReadEditorsTemplates", "ParametersService")))
+        </div>
+    </div>
+    <div class="editor-field">
+        @Html.Kendo().CheckBoxFor(m => m.Required)
+    </div>
+    <div class="editor-field">
+        @Html.Kendo().CheckBoxFor(m => m.Hide)
+    </div>
+
+<style>
+        .k-edit-form-container {
+            width: 100%;
+        }
+
+        .k-edit-form-container .k-edit-buttons {
+            position: fixed; /* Фиксированное положение */
+            left: 0;
+            bottom: 0; /* Левый нижний угол */
+            width: calc(100% - 1.2em); /* Ширина слоя */
+            padding: .6em;
+        }
+</style>

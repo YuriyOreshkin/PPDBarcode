@@ -1,0 +1,126 @@
+﻿<div id="forms" style="float:left;width:250px;display:block">
+    @Html.Partial("~/Views/Forms/List.cshtml")
+</div>
+<div id="content" style="width:calc(100% - 255px); float:right;">
+    @(Html.Kendo().TabStrip()
+                                        .Name("tabStrip")
+                                        .SelectedIndex(0)
+                                        .Scrollable(true)
+                                        .Animation(animation => animation.Open(open => open.Fade(FadeDirection.In)))
+                                        .Events(ev =>
+                                        {
+                                            ev.Select("onSelectTab");
+
+                                        })
+                                        .Items(items =>
+                                        {
+                                            items.Add().Text("Просмотр").LoadContentFrom("Input", "ParametersService", new { formId = 0 });
+                                            items.Add().Text("Параметры").LoadContentFrom("List", "Parameters", new { formId = 0 });
+                                            items.Add().Text("Шаблон").LoadContentFrom("Editor", "Template", new { formId = 0 });
+                                        })
+
+    )
+</div>
+<div>
+    @(Html.Kendo().Window()
+                                                       .Name("window")
+                                                       .Modal(true)
+                                                       .Visible(false)
+                                                       .Resizable()
+                                                       .Draggable()
+                                                       .Width(550)
+                                                       .Height(300)
+                                                       .HtmlAttributes(new { @class = "k-popup-edit-form" })
+
+    )
+</div>
+<script>
+
+   
+    //Replace Form Id
+    function buildTabUrl(url, formId)
+    {
+        return url.substring(0, url.indexOf("=")+1) + formId;
+        
+    }
+
+    //Event select tabStrip
+    function onSelectTab(e) {
+        var tab = e.item;
+        var item = getSelectedForm();
+        ReloadTabContent(tab, item.Id);
+    }
+
+
+    //Reload Tab
+    function ReloadTab(formId)
+    {
+        var tab = getSelectedTab();
+        ReloadTabContent(tab, formId);
+    }
+
+    function ReloadTabContent(tab, formId)
+    {
+        var tabStrip = $("#tabStrip").data("kendoTabStrip");
+        var link = $(tab).find(".k-link");
+        var url = buildTabUrl(link.data("contentUrl"), formId);
+        link.data("contentUrl", url)
+        tabStrip.reload(tab);
+    }
+
+    //Get selectted tab
+    function getSelectedForm() {
+        var grid = $("#formsGrid").data("kendoGrid");
+        var selected = grid.select();
+        var item = grid.dataItem(selected);
+
+        return item;
+    }
+
+    //Get selectted tab
+    function getSelectedTab()
+    {
+        var tabStrip = $("#tabStrip").data("kendoTabStrip");
+        var tab = tabStrip.select();
+
+        return tab;
+    }
+
+
+    function getSelectedFormId()
+    {
+        var grid = $("#formsGrid").data("kendoGrid");
+        var tabStrip = $("#tabStrip").data("kendoTabStrip");
+        var selected = tabStrip.select();
+        var item = grid.dataItem(selected);
+
+        return item.Id
+    }
+
+    function showWindows(title, url, data)
+    {
+        var wnd = $("#window").data("kendoWindow");
+      
+        //Clean content
+        wnd.content("");
+
+        //Set title
+        wnd.title(title);
+
+        //Load content
+        wnd.refresh({
+            url: url,
+            type: "POST",
+            datatype: "json",
+            data: data
+        });
+
+        wnd.center().open();
+    }
+
+
+    function closeWindow(e) {
+
+        $("#window").data("kendoWindow").close();
+    }
+</script>

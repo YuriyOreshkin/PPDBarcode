@@ -1,0 +1,19 @@
+﻿@model string
+
+@(Html.Kendo().Editor()
+                                                              .Name("template-preview")
+                                                              .Tools(tools => tools.Clear()
+                                                                .Print()
+                                                                .Pdf()
+                                                                )
+                                                                .Pdf(pdf => pdf
+                                                                      .Margin(20, 20, 20, 20)
+                                                                      .FileName("DSV.pdf")
+
+                                                                 )
+                                                              .HtmlAttributes(new { style = "width:21.5cm;   height: 30.5cm;", aria_label = "editor" })
+                                                              .StyleSheets(css => css.Add(Url.Content("~/Content/editor.css")))
+                                                              .Value(Url.Action())
+
+)
+

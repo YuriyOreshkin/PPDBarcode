@@ -1,0 +1,239 @@
+﻿@model string
+<script>
+
+    function SaveTemplate(e)
+    {
+        var editor = $("#template-editor").data("kendoEditor");
+        var editorContents = editor.encodedValue();
+
+        $.post('@Url.Action("Save", "Template")', {
+                data: editorContents
+            },
+            function (e) {
+                showSuccess('Шаблон успешно сохранён!');
+            }
+        );
+    }
+
+    function IndexOf(str)
+    {
+        var index = -1;
+        var temp = str;
+        let i = 1;
+        //Считаем символы '(' и ')' для тела barcode()
+        while (i > 0 && temp.length > 0) {
+
+            if (temp.substring(0, 1) == "(")
+            {
+                i++;
+            }
+
+            if (temp.substring(0, 1) == ")") {
+                i--;
+            }
+
+            temp =temp.substring(1, temp.length - 1);
+
+            index++;
+        }
+
+        return index;
+    }
+
+
+
+    function setBarcodeName(data)
+    {
+        var symbol = "barcode";
+
+        return symbol +"(" + data[0].name + "=" + data[0].value + ";" + data[1].name + "=" + data[1].value + ";" + data[2].name + "=" + data[2].value + ")"
+    }
+
+    function getBarcodeByName(name)
+    {
+        var symbol = "barcode(";
+        var editor = $("#template-editor").data("kendoEditor");
+        var text = editor.value();
+        var startIndex = text.indexOf(symbol+"Name=" + name);
+
+        var barcode = "";
+        if (startIndex >= 0) {
+
+
+            var lastIndex = IndexOf(text.substring(startIndex + symbol.length));
+            if (lastIndex > 0) {
+
+                barcode = text.substring(startIndex, startIndex + lastIndex + symbol.length + 1);
+            }
+        }
+
+        return barcode;
+    }
+
+    function getBarcode()
+    {
+        var editor = $("#template-editor").data("kendoEditor");
+        var range = editor.getRange();
+        var model = { Size: 200 };
+        var barcode = range.startContainer.data;
+        if (barcode.indexOf("barcode(") >= 0) {
+
+            model = { Name: getBarcodeProperty(barcode, "Name"), Value: getBarcodeProperty(barcode, "Value"), Size: getBarcodeProperty(barcode, "Size") };
+        }
+
+        return model;
+    }
+
+
+    function getBarcodeProperty(barcode, property)
+    {
+        var startIndex = barcode.indexOf(property + "=");
+        var lastIndex = barcode.indexOf(";", startIndex);
+        if (lastIndex < 0) {
+
+            lastIndex = barcode.indexOf(")", startIndex);
+        }
+
+        startIndex = startIndex + property.length + 1;
+
+        return barcode.substring(startIndex, lastIndex);;
+
+    }
+
+    function findNodeOfString(container, str) {
+        var nodeIterator = document.createNodeIterator(
+            container,
+            NodeFilter.SHOW_TEXT,
+            function (node) {
+                return node.nodeValue.indexOf(str) >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+            });
+
+        return nodeIterator.nextNode();
+    }
+
+    function UpdateBarcode(editor, str, newstr) {
+        var range = editor.getRange();
+        if (range.collapsed) {
+
+
+            var textNode = findNodeOfString(editor.body, str);
+            if (textNode !== null) {
+                var position = textNode.nodeValue.indexOf(str);
+                range.setStart(textNode, position);
+                textNode.data = newstr;
+            }
+            range.collapse(true); // collapse to start
+            editor.selectRange(range);
+        }
+    }
+
+    function InsertBarcode(e) {
+
+        var validator = $("#barcode-insert").kendoValidator().data("kendoValidator");
+
+        if (validator.validate()) {
+
+            var editor = $("#template-editor").data("kendoEditor");
+            var data = $("#barcode-insert").serializeArray();
+
+            var barcode = getBarcodeByName(data[0].value);
+
+            if (barcode == "") {
+
+                //Insert barcode
+                editor.paste(setBarcodeName(data));
+            }
+            else
+            {
+                //Update barcode
+                UpdateBarcode(editor, barcode, setBarcodeName(data));
+
+            }
+            closeWindow();
+            
+        }
+    }
+
+   
+
+
+    function DisplayBarcode(element)
+    {
+        
+        if (element) {
+            var value = $(element).text();
+            var size = $(element).attr("size");
+
+            //text 
+            $(element).text("");
+
+            $(element).kendoQRCode({
+                value: value,
+                size: size,
+                encoding: "UTF_8",
+                errorCorrection: "M"
+               
+            });
+
+        }
+    }
+
+   
+    //Show Detail in Window
+    function BarcodeDetails()
+    {
+        var data = getBarcode();
+        showWindows("Штрих-код", "@Url.Action("Barcode", "Template")", data)
+
+    }
+
+</script>
+
+@(Html.Kendo().Editor()
+                                                              .Name("template-editor")
+                                                              .Tools(tools => tools.Clear()
+                                                                .CustomTemplate(save => save.Template("" + Html.Kendo().Button().Name("temlate-save").Icon("save").HtmlAttributes(new { @class = "k-primary" }).Content("Сохранить шаблон").Events(ev => ev.Click("SaveTemplate")).ToClientTemplate()))
+                                                                .Separator()
+                                                                .Bold().Italic().Underline()
+                                                                .JustifyLeft().JustifyCenter().JustifyRight().JustifyFull()
+                                                                 //.Indent().Outdent()
+                                                                 .Separator()
+                                                                .InsertUnorderedList().InsertOrderedList()
+                                                                .Separator()
+                                                                .CustomTemplate(save => save.Template("" + Html.Kendo().Button().Name("temlate-barcode").Icon("qr-code").Events(ev => ev.Click("BarcodeDetails")).ToClientTemplate()))
+                                                                .InsertImage()
+                                                                .Separator()
+                                                                .FontName()
+                                                                .FontSize()
+                                                                .Separator()
+                                                                .Print()
+                                                                .Pdf()
+                                                                .Separator()
+                                                                .TableEditing()
+                                                                )
+                                                                .Pdf(pdf => pdf
+                                                                      .Margin(20, 20, 20, 20)
+                                                                      //.PaperSize("A4")
+                                                                      //.Scale(0.7)
+                                                                      .FileName("DSV.pdf")
+
+                                                                 )
+                                                              //.Messages(mes => mes.FontNameInherit("Arial Default").FontSizeInherit("7pt"))
+                                                              .HtmlAttributes(new { style = "width:21.5cm;   height: 30.5cm;", aria_label = "editor" })
+                                                              .StyleSheets(css => css.Add(Url.Content("~/Content/editor.css")))
+                                                              .Value(Model)
+
+)
+
+
+
+<script>
+
+    $(document).ready(function () {
+        var editor = $("#template-editor").data("kendoEditor");
+        $(editor.document).find(".barcode").each(function (index, element) {
+            DisplayBarcode($(element));
+        });
+    });
+
+</script>

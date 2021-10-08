@@ -1,0 +1,67 @@
+﻿<script>
+    function onSelectForm(e)
+    {
+        var item = getSelectedForm();
+        ReloadTab(item.Id);
+    }
+</script>
+<script type="text/x-kendo-tmpl" id="template">
+    <tr data-uid='#: uid #'>
+        <td>
+            <div style="padding:5px;">
+                <div class="k-block">
+                    <div class="k-header k-shadow" style="text-align: center;">#:Name#</div>
+                    <div class="k-content" style="border-radius:4px;padding:5px;">  #:Description#</div>
+                    <div class="k-edit-buttons k-state-default">
+                        <a class="k-button k-edit-button" title="Копировать" href="\\#"><span class="k-icon k-i-copy"></span></a>
+                        <a class="k-button k-button-icontext k-grid-edit" title="Редактировать" href="\\#"><span class="k-icon k-i-edit"></span></a>
+                        <a class="k-button k-delete-button" title="Удалить" href="\\#"><span class="k-icon k-i-delete"></span></a>
+                    </div>
+                </div>
+            </div>
+            </td>
+        </tr>
+</script>
+<script>
+    var template = kendo.template($('#template').html());
+</script>
+
+@(Html.Kendo().Grid<PPDBarcode.Models.FormViewModel>()
+                .Name("formsGrid")
+                .ToolBar(tool => tool.Create())
+                .Columns(columns=> {
+                    columns.Bound(p => p.Id).HeaderHtmlAttributes(new { style = "display:none;" });
+                    columns.Command(commands => commands.Edit()).HeaderHtmlAttributes(new { style = "display:none;" }); 
+                })
+                .ClientRowTemplate("#= template(data) #")
+                .HtmlAttributes(new { style = "width: 250px;" })
+                .Selectable(selectable => selectable.Mode(GridSelectionMode.Single))
+                .Editable(edit => edit.TemplateName("FormEditor").Mode(GridEditMode.PopUp))
+                .DataSource(dataSource => dataSource.Ajax()
+                    .Model(model => model.Id(p => p.Id))
+                    .Read(read => read.Action("Read", "FormsService"))
+                    .Create(create=>create.Action("Create", "FormsService"))
+                    .Update(update => update.Action("Update", "FormsService"))
+                    .Destroy(destroy => destroy.Action("Destroy", "FormsService"))
+
+                )
+                .Events(events=>events.Change("onSelectForm"))
+
+)
+
+
+<style>
+    .k-edit-buttons .k-button {
+        min-width: 20px;
+    }
+
+    .k-edit-buttons {
+        clear: both;
+        text-align: right;
+        bottom: .1em;
+        padding-top: .4em;
+        border-width: 1px 0 0;
+        border-style: solid
+    }
+</style>
+

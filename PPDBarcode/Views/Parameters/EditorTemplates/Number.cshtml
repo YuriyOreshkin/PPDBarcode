@@ -1,0 +1,3 @@
+@model PPDBarcode.Models.ParameterViewModel
+
+@(Html.Kendo().NumericTextBox().Name(Model.Name).Value(Double.Parse(Model.DefaultValue)).Format("D").HtmlAttributes(new { style = "width: 100%", }))

@@ -1,0 +1,4 @@
+@model PPDBarcode.Models.ParameterViewModel
+
+@Html.Kendo().MaskedTextBox().Name(Model.Name).Mask("000-000-000 00").HtmlAttributes(new { style = "width:150px;" }).Value(Model.DefaultValue)
+

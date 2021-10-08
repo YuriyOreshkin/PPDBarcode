@@ -1,0 +1,104 @@
+﻿@model int?
+<script>
+    function setOrder(step) {
+        var grid = $("#gridParametersModels").data("kendoGrid");
+        var selectedItem = grid.select();
+        if (selectedItem.length > 0) {
+            var item = grid.dataItem(selectedItem);
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("SetOrder", "ParametersService")",
+                datatype: 'json',
+                data: { id: item.Id, step: step },
+                success: function (data) {
+                    if (data.result == "OK") {
+
+                        grid.dataSource.read().done(function () {
+                            var uid = grid.dataSource.get(item.id).uid;
+                            grid.select("tr[data-uid='" + uid + "']")
+                        });
+                    }
+                    else {
+
+                        showError(data.errors);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+
+                    showError(thrownError + "-" + xhr.status);
+                }
+            });
+
+        }
+    }
+
+    function error_handler(e) {
+        if (e.errors) {
+            var message = "Ошибки:\n";
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function() {
+                        message += this + "\n";
+                    });
+                }
+            });
+
+            showError(message);
+            var grid = $("#gridParametersModels").data("kendoGrid");
+            grid.cancelChanges();
+        }
+    }
+
+
+</script>
+@(Html.Kendo().Grid<PPDBarcode.Models.ParameterViewModel>()
+                                        .Name("gridParametersModels")
+                                        .HtmlAttributes(new { @class = "data-view", style = "margin: 10px 5px;" })
+                                          .ToolBar(toolbar => toolbar.Template( @<text>
+                                            @item.CreateButton()
+                                            <a id="setOrderUpButton" class="k-button k-button-icon" style="float:right;" onclick="setOrder(-1)" data-role="button" role="button" aria-disabled="false" tabindex="0">
+                                                <span class="k-icon k-i-arrow-n"></span>
+                                            </a>
+                                            <a id="setOrderDownButton" class="k-button k-button-icon" style="float:right;" onclick="setOrder(1)" data-role="button" role="button" aria-disabled="false" tabindex="0">
+                                                <span class="k-icon k-i-arrow-s"></span>
+                                            </a>
+                                        </text>))
+                                                    .Columns(columns =>
+                                                    {
+                                                        columns.Bound(p => p.Id).Width(60);
+                                                        columns.Bound(p => p.Name).Width(100);
+                                                        columns.Bound(p => p.Label);
+                                                        columns.Bound(p => p.EditorTemplate).Width(150);
+                                                        columns.Bound(p => p.Required).Width(120).HtmlAttributes(new { style = "text-align: center;" }).ClientTemplate("<input type='checkbox' class='k-checkbox' disabled='disabled' #= Required ? checked='checked' :'' # /><label class='k-checkbox-label' for='Required'></label>");
+                                                        columns.Bound(p => p.Hide).Width(90).HtmlAttributes(new { style = "text-align: center;" }).ClientTemplate("<input type='checkbox' class='k-checkbox' disabled='disabled' #= Hide ? checked='checked' :'' # /><label class='k-checkbox-label' for='Hide'></label>"); ;
+                                                        columns.Bound(p => p.DefaultValue);
+                                                        columns.Command(commands =>
+                                                        {
+                                                            commands.Edit();
+                                                            commands.Destroy();
+                                                        }).Width(250);
+
+                                                    })
+                                                    .Editable(edit => edit.Mode(GridEditMode.PopUp).TemplateName("ParameterEditor").Window(w => w.Resizable().Width(500).Height(350)))
+                                                    .Resizable(size => size.Columns(true))
+                                                    .Sortable()
+                                                    .Selectable()
+                                                    .Filterable()
+                                                    .DataSource(dataSource => dataSource
+                                                                .Ajax()
+                                                                .Model(model =>
+                                                                {
+                                                                    model.Id(p => p.Id);
+                                                                    model.Field(n => n.Id).Editable(false);
+                                                                })
+                                                                .Events(events => events.Error("error_handler"))
+                                                                .Read(read => read.Action("Read", "ParametersService",new { formId= Model }))
+                                                                .Create(update => update.Action("Create", "ParametersService", new { formId = Model }))
+                                                                .Update(update => update.Action("Update", "ParametersService", new { formId = Model } ))
+                                                                .Destroy(update => update.Action("Destroy", "ParametersService", new { formId = Model }))
+                                                                .Sort(sort => sort.Add(s => s.Id))
+                                                                )
+
+)
+
+
